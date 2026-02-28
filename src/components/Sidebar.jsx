@@ -1,4 +1,4 @@
-import { Home, Compass, MessageCircle, Bell, User, Code2, Settings, Terminal, GitBranch, Bug, PanelLeftClose, PanelLeft, Trophy } from 'lucide-react'
+import { Home, Compass, MessageCircle, Bell, User, Code2, Settings, GitBranch, Bug, PanelLeftClose, PanelLeft, Trophy } from 'lucide-react'
 
 function Sidebar({ currentPage, setCurrentPage, onCreateClick, isCollapsed, setIsCollapsed, currentUser, unreadNotifications = 0, unreadMessages = 0 }) {
   const navItems = [
@@ -17,7 +17,7 @@ function Sidebar({ currentPage, setCurrentPage, onCreateClick, isCollapsed, setI
       
       <div className="logo">
         <div className="logo-icon">
-          <Terminal size={18} />
+          <img src="/favicon.png" alt="DevSync" style={{ width: 20, height: 20, borderRadius: 4 }} />
         </div>
         {!isCollapsed && (
           <>
