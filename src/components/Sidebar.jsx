@@ -17,7 +17,7 @@ function Sidebar({ currentPage, setCurrentPage, onCreateClick, isCollapsed, setI
       
       <div className="logo">
         <div className="logo-icon">
-          <img src="/favicon.png" alt="DevSync" style={{ width: 20, height: 20, borderRadius: 4 }} />
+          <img src="/favicon.png" alt="DevSync" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'contain' }} />
         </div>
         {!isCollapsed && (
           <>
