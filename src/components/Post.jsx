@@ -39,7 +39,7 @@ function Post({ post, onLike, onRefactor, onBookmark, onComment, onDelete, onRep
       go: '#00ADD8',
       typescript: '#3178c6'
     }
-    return colors[lang] || '#60a5fa'
+    return colors[lang] || '#f0c040'
   }
 
   const mockOutputs = {

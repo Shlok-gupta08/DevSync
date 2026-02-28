@@ -12,7 +12,7 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
       javascript: '#f7df1e',
       cpp: '#f34b7d',
     }
-    return colors[lang] || '#60a5fa'
+    return colors[lang] || '#f0c040'
   }
 
   const generateDiff = () => {
