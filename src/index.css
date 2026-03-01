@@ -430,6 +430,9 @@ body {
   padding: 8px;
   border-radius: 8px;
   transition: background 0.2s ease;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .post-menu-btn:hover {
@@ -3234,6 +3237,11 @@ body {
   gap: 6px;
   font-size: 13px;
   color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
 }
 
 .snippet-stat svg {
@@ -3242,6 +3250,19 @@ body {
 
 .snippet-stat.runs svg {
   color: var(--success);
+}
+
+.snippet-stat.star-btn:hover {
+  color: var(--warning);
+}
+
+.snippet-stat.star-btn.active {
+  color: var(--warning);
+}
+
+.snippet-stat.star-btn.active svg {
+  color: var(--warning);
+  fill: var(--warning);
 }
 
 .snippet-code {
