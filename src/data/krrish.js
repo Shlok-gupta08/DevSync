@@ -1,7 +1,3 @@
-// ============================================
-// KRRISH GAUTAM — User-specific data
-// Systems programming / C++ / Rust-focused feed
-// ============================================
 
 export const posts = [
   {

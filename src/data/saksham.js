@@ -1,7 +1,3 @@
-// ============================================
-// SAKSHAM GUPTA — User-specific data
-// Backend / Java / Microservices-focused feed
-// ============================================
 
 export const posts = [
   {

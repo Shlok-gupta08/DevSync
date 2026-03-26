@@ -1,7 +1,3 @@
-// ============================================
-// SHLOK GUPTA — User-specific data
-// Full-stack / React-focused developer feed
-// ============================================
 
 export const posts = [
   {
