@@ -1,8 +1,5 @@
 // ============================================
 // CENTRALIZED DATA STORE
-// State Hydration: getUserData(userId) pulls user-specific
-// data arrays and injects them into React state.
-// Replace internals with API/DB calls for production.
 // ============================================
 
 import { authenticateUser, getUserById, getAllUsers, registerUser, usernameExists, getSavedProfiles } from './data/users'
@@ -12,8 +9,6 @@ import * as krrishData from './data/krrish'
 
 // ============================================
 // USER DATA REGISTRY — Maps user IDs to their data modules
-// Data Decoupling: Adding a new user = adding a data file
-// + one line here. Zero UI code changes needed.
 // ============================================
 
 const userDataMap = {
@@ -24,8 +19,6 @@ const userDataMap = {
 
 // ============================================
 // STATE HYDRATION FUNCTION
-// Pulls user-specific arrays for React state injection.
-// Simulates how a real app fetches from SQL/NoSQL DB.
 // ============================================
 
 export const getUserData = (userId) => {
@@ -57,7 +50,7 @@ export const formatTimeAgo = (date) => {
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
-  
+
   if (minutes < 1) return 'Just now'
   if (minutes < 60) return `${minutes}m ago`
   if (hours < 24) return `${hours}h ago`
@@ -88,7 +81,7 @@ export const mockOutputs = {
 export const sharePost = async (post) => {
   const shareUrl = `https://devsync.dev/snippet/${post.id}`
   const shareText = `Check out this ${post.language} snippet by ${post.user.name}: "${post.content}"`
-  
+
   if (navigator.share) {
     try {
       await navigator.share({
@@ -101,7 +94,7 @@ export const sharePost = async (post) => {
       // User cancelled or share failed
     }
   }
-  
+
   // Fallback to clipboard
   try {
     await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`)
@@ -115,7 +108,7 @@ export const sharePost = async (post) => {
 export const shareProfile = async (user) => {
   const shareUrl = `https://devsync.dev/user/${user.handle.replace('@', '')}`
   const shareText = `Check out ${user.name}'s profile on DevSync - ${user.karma} karma!`
-  
+
   if (navigator.share) {
     try {
       await navigator.share({
@@ -128,7 +121,7 @@ export const shareProfile = async (user) => {
       // User cancelled
     }
   }
-  
+
   try {
     await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`)
     return { success: true, method: 'clipboard' }

@@ -1,8 +1,3 @@
-// ============================================
-// USER REGISTRY — Central user credentials & profiles
-// Data Decoupling: UI components never import this directly.
-// The store.js hydrates state from these data files.
-// ============================================
 
 const users = {
   shlok: {
@@ -90,7 +85,13 @@ export const usernameExists = (username) => {
 export const registerUser = (username, password) => {
   if (usernameExists(username)) return null
 
-  const id = username.toLowerCase().replace(/[^a-z0-9_]/g, '')
+  let id = username.toLowerCase().replace(/[^a-z0-9_]/g, '')
+  
+  // Prevent overwriting existing user IDs
+  while (users[id]) {
+    id = `${id}_${Math.floor(Math.random() * 10000)}`
+  }
+
   const initials = username.split('_').map(w => w[0]?.toUpperCase() || '').join('').slice(0, 3) || 'U'
   const now = new Date()
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']

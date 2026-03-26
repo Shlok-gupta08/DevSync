@@ -500,53 +500,55 @@ function Messages({ currentUser, conversations: propConversations, onMarkRead, t
         </div>
 
         <div className="chat-area dev">
-          <div className="chat-header dev">
-            <div className={`message-avatar ${selectedChat.isGroup ? 'group' : ''}`}>
-              {selectedChat.avatar}
-            </div>
-            <div className="message-info">
-              <div className="message-name-row">
-                <span className="message-name">{selectedChat.name}</span>
-                {selectedChat.skills?.map(skill => (
-                  <span key={skill} className="skill-mini">{skill}</span>
-                ))}
-              </div>
-              <div className="message-preview" style={{ color: 'var(--success)' }}>
-                {selectedChat.isGroup ? `${selectedChat.handle} • Active` : 'Online'}
-              </div>
-            </div>
-            {selectedChat?.project && (
-              <div className="chat-project-badge">
-                <GitBranch size={14} />
-                <span>{selectedChat.project}</span>
-              </div>
-            )}
-            <div className="chat-header-actions">
-              <button className="chat-action-btn" title="View members"><Users size={18} /></button>
-              <div className="chat-menu-wrapper">
-                <button 
-                  className="chat-action-btn" 
-                  onClick={() => setShowChatMenu(!showChatMenu)}
-                >
-                  <MoreVertical size={18} />
-                </button>
-                {showChatMenu && (
-                  <div className="chat-menu-dropdown">
-                    <button onClick={() => { setShowChatMenu(false); toast && toast.info('Notifications muted'); }}>
-                      Mute notifications
-                    </button>
-                    <button onClick={() => { setShowChatMenu(false); toast && toast.info('Conversation archived'); }}>
-                      Archive chat
-                    </button>
-                    <button className="danger" onClick={handleDeleteConversation}>
-                      <Trash2 size={14} />
-                      Delete conversation
-                    </button>
+          {selectedChat ? (
+            <>
+              <div className="chat-header dev">
+                <div className={`message-avatar ${selectedChat?.isGroup ? 'group' : ''}`}>
+                  {selectedChat?.avatar}
+                </div>
+                <div className="message-info">
+                  <div className="message-name-row">
+                    <span className="message-name">{selectedChat?.name}</span>
+                    {selectedChat?.skills?.map(skill => (
+                      <span key={skill} className="skill-mini">{skill}</span>
+                    ))}
+                  </div>
+                  <div className="message-preview" style={{ color: 'var(--success)' }}>
+                    {selectedChat?.isGroup ? `${selectedChat?.handle} • Active` : 'Online'}
+                  </div>
+                </div>
+                {selectedChat?.project && (
+                  <div className="chat-project-badge">
+                    <GitBranch size={14} />
+                    <span>{selectedChat?.project}</span>
                   </div>
                 )}
+                <div className="chat-header-actions">
+                  <button className="chat-action-btn" title="View members"><Users size={18} /></button>
+                  <div className="chat-menu-wrapper">
+                    <button 
+                      className="chat-action-btn" 
+                      onClick={() => setShowChatMenu(!showChatMenu)}
+                    >
+                      <MoreVertical size={18} />
+                    </button>
+                    {showChatMenu && (
+                      <div className="chat-menu-dropdown">
+                        <button onClick={() => { setShowChatMenu(false); toast && toast.info('Notifications muted'); }}>
+                          Mute notifications
+                        </button>
+                        <button onClick={() => { setShowChatMenu(false); toast && toast.info('Conversation archived'); }}>
+                          Archive chat
+                        </button>
+                        <button className="danger" onClick={handleDeleteConversation}>
+                          <Trash2 size={14} />
+                          Delete conversation
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
           <div className="chat-messages dev">
             {messages.map(msg => {
@@ -653,7 +655,7 @@ function Messages({ currentUser, conversations: propConversations, onMarkRead, t
               return (
                 <div key={msg.id} className={`chat-message ${msg.sent ? 'sent' : 'received'}`}>
                   {!msg.sent && (
-                    <div className="chat-msg-avatar">{selectedChat.avatar}</div>
+                    <div className="chat-msg-avatar">{selectedChat?.avatar}</div>
                   )}
                   <div className="chat-msg-content">
                     {msg.text && <div className="chat-bubble">{msg.text}</div>}
@@ -764,33 +766,45 @@ function Messages({ currentUser, conversations: propConversations, onMarkRead, t
             </div>
           )}
 
-          <div className="chat-input-area dev">
-            <button 
-              className={`code-toggle-btn ${showSavedPicker ? 'active' : ''}`}
-              onClick={() => { setShowSavedPicker(!showSavedPicker); setShowCodeInput(false); }}
-              title="Attach from saved"
-            >
-              <Bookmark size={20} />
-            </button>
-            <button 
-              className={`code-toggle-btn ${showCodeInput ? 'active' : ''}`}
-              onClick={() => { setShowCodeInput(!showCodeInput); setShowSavedPicker(false); }}
-              title="Share code"
-            >
-              <Code size={20} />
-            </button>
-            <input 
-              type="text" 
-              className="chat-input" 
-              placeholder={attachedPost ? `Send with "${attachedPost.title}"...` : showCodeInput ? "Add a message with your code..." : "Type a message..."}
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-            />
-            <button className="send-btn" onClick={sendMessage}>
-              <Send size={20} />
+            <div className="chat-input-area dev">
+              <button 
+                className={`code-toggle-btn ${showSavedPicker ? 'active' : ''}`}
+                onClick={() => { setShowSavedPicker(!showSavedPicker); setShowCodeInput(false); }}
+                title="Attach from saved"
+              >
+                <Bookmark size={20} />
+              </button>
+              <button 
+                className={`code-toggle-btn ${showCodeInput ? 'active' : ''}`}
+                onClick={() => { setShowCodeInput(!showCodeInput); setShowSavedPicker(false); }}
+                title="Share code"
+              >
+                <Code size={20} />
+              </button>
+              <input 
+                type="text" 
+                className="chat-input" 
+                placeholder={attachedPost ? `Send with "${attachedPost.title}"...` : showCodeInput ? "Add a message with your code..." : "Type a message..."}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+              <button className="send-btn" onClick={sendMessage}>
+                <Send size={20} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="chat-empty-state">
+            <MessageCircle size={48} className="empty-icon" />
+            <h3>Your Messages</h3>
+            <p>Select a conversation or start a new one to connect with other developers.</p>
+            <button className="new-chat-btn" onClick={() => setShowNewChatModal(true)} style={{ marginTop: '20px' }}>
+              <Plus size={18} />
+              New Chat
             </button>
           </div>
+        )}
         </div>
       </div>
     </div>

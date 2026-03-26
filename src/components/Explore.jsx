@@ -5,9 +5,9 @@ function Explore({ toast }) {
   const [activeTab, setActiveTab] = useState('trending')
   const [activeLang, setActiveLang] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [joinedChallenges, setJoinedChallenges] = useState([2]) // IDs of joined challenges
-  const [followedDevs, setFollowedDevs] = useState([]) // IDs of followed devs
-  const [starredSnippets, setStarredSnippets] = useState([]) // IDs of starred snippets
+  const [joinedChallenges, setJoinedChallenges] = useState([2])
+  const [followedDevs, setFollowedDevs] = useState([])
+  const [starredSnippets, setStarredSnippets] = useState([])
 
   const tabs = [
     { id: 'trending', label: 'Trending', icon: Flame },
@@ -163,7 +163,7 @@ function Explore({ toast }) {
   }
 
   const getDifficultyColor = (diff) => {
-    switch(diff) {
+    switch (diff) {
       case 'Easy': return 'var(--success)'
       case 'Medium': return 'var(--warning)'
       case 'Hard': return 'var(--error)'
@@ -179,7 +179,7 @@ function Explore({ toast }) {
     }
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
-      snippets = snippets.filter(s => 
+      snippets = snippets.filter(s =>
         s.title.toLowerCase().includes(query) ||
         s.author.toLowerCase().includes(query) ||
         s.tags.some(t => t.toLowerCase().includes(query))
@@ -275,9 +275,9 @@ function Explore({ toast }) {
         </div>
         <div className="terminal-input-wrap">
           <span className="terminal-prompt">$</span>
-          <input 
-            type="text" 
-            className="terminal-input" 
+          <input
+            type="text"
+            className="terminal-input"
             placeholder="grep -r 'your query' --include='*.{js,py,rs}'"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -335,7 +335,7 @@ function Explore({ toast }) {
                     </div>
                   </div>
                   <div className="snippet-stats">
-                    <button 
+                    <button
                       className={`snippet-stat star-btn ${starredSnippets.includes(snippet.id) ? 'active' : ''}`}
                       onClick={() => handleStarSnippet(snippet.id)}
                     >
@@ -357,8 +357,8 @@ function Explore({ toast }) {
                 </div>
                 <div className="snippet-tags">
                   {snippet.tags.map(tag => (
-                    <span 
-                      key={tag} 
+                    <span
+                      key={tag}
                       className="snippet-tag"
                       onClick={() => setSearchQuery(tag)}
                     >
@@ -383,7 +383,7 @@ function Explore({ toast }) {
               <div key={challenge.id} className="challenge-card">
                 <div className="challenge-header">
                   <Trophy size={20} className="challenge-icon" />
-                  <span 
+                  <span
                     className="challenge-difficulty"
                     style={{ color: getDifficultyColor(challenge.difficulty) }}
                   >
@@ -412,7 +412,7 @@ function Explore({ toast }) {
                     {challenge.timeLeft}
                   </div>
                 </div>
-                <button 
+                <button
                   className={`challenge-join-btn ${joinedChallenges.includes(challenge.id) ? 'joined' : ''}`}
                   onClick={() => handleJoinChallenge(challenge.id)}
                 >
@@ -509,7 +509,7 @@ function Explore({ toast }) {
                     <span className="dev-stat-label">day streak</span>
                   </div>
                 </div>
-                <button 
+                <button
                   className={`follow-dev-btn ${followedDevs.includes(dev.id) ? 'following' : ''}`}
                   onClick={() => handleFollowDev(dev.id)}
                 >

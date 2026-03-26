@@ -30,23 +30,25 @@ function Profile({ posts, onLike, currentUser, setCurrentUser, onUpdateProfile, 
     { id: 3, name: 'Ryan Florence', handle: '@ryanflorence', avatar: 'RF', karma: 87000, skills: ['Remix', 'React'], isFollowing: true },
   ])
 
-  const skills = [
+  const isDemoUser = ['shlok', 'saksham', 'krrish'].includes(currentUser?.id)
+
+  const skills = isDemoUser ? [
     { name: 'JavaScript', level: 92, color: '#f7df1e' },
     { name: 'Python', level: 85, color: '#3572A5' },
     { name: 'React', level: 88, color: '#61dafb' },
     { name: 'Node.js', level: 78, color: '#68a063' },
     { name: 'TypeScript', level: 72, color: '#3178c6' },
-  ]
+  ] : []
 
-  const badges = [
+  const badges = isDemoUser ? [
     { id: 1, name: 'Bug Squasher', icon: '🐛', desc: 'Fixed 100+ bugs' },
     { id: 2, name: 'Code Ninja', icon: '🥷', desc: '50 refactors accepted' },
     { id: 3, name: 'Early Adopter', icon: '🚀', desc: 'Joined in beta' },
     { id: 4, name: 'Helpful Hand', icon: '🤝', desc: '200+ karma from helping' },
-  ]
+  ] : []
 
   const contributionData = Array.from({ length: 52 }, () => 
-    Array.from({ length: 7 }, () => Math.floor(Math.random() * 5))
+    Array.from({ length: 7 }, () => isDemoUser ? Math.floor(Math.random() * 5) : 0)
   )
 
   const formatCount = (num) => {
@@ -192,15 +194,21 @@ function Profile({ posts, onLike, currentUser, setCurrentUser, onUpdateProfile, 
           <Award size={16} /> Badges
         </h3>
         <div className="badges-grid">
-          {badges.map(badge => (
-            <div key={badge.id} className="badge-card">
-              <span className="badge-icon">{badge.icon}</span>
-              <div className="badge-info">
-                <span className="badge-name">{badge.name}</span>
-                <span className="badge-desc">{badge.desc}</span>
+          {badges.length > 0 ? (
+            badges.map(badge => (
+              <div key={badge.id} className="badge-card">
+                <span className="badge-icon">{badge.icon}</span>
+                <div className="badge-info">
+                  <span className="badge-name">{badge.name}</span>
+                  <span className="badge-desc">{badge.desc}</span>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="empty-tab" style={{ gridColumn: '1 / -1', padding: '2rem 0' }}>
+              <p>No badges earned yet</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
@@ -209,20 +217,26 @@ function Profile({ posts, onLike, currentUser, setCurrentUser, onUpdateProfile, 
           <Code2 size={16} /> Tech Stack
         </h3>
         <div className="skills-list">
-          {skills.map(skill => (
-            <div key={skill.name} className="skill-item">
-              <div className="skill-header">
-                <span className="skill-name">{skill.name}</span>
-                <span className="skill-percent">{skill.level}%</span>
+          {skills.length > 0 ? (
+            skills.map(skill => (
+              <div key={skill.name} className="skill-item">
+                <div className="skill-header">
+                  <span className="skill-name">{skill.name}</span>
+                  <span className="skill-percent">{skill.level}%</span>
+                </div>
+                <div className="skill-bar">
+                  <div 
+                    className="skill-progress" 
+                    style={{ width: `${skill.level}%`, background: skill.color }}
+                  ></div>
+                </div>
               </div>
-              <div className="skill-bar">
-                <div 
-                  className="skill-progress" 
-                  style={{ width: `${skill.level}%`, background: skill.color }}
-                ></div>
-              </div>
+            ))
+          ) : (
+            <div className="empty-tab" style={{ padding: '2rem 0' }}>
+              <p>No skills added yet</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

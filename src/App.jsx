@@ -13,52 +13,37 @@ import LoginPage from './components/LoginPage'
 import { ToastProvider, useToast } from './components/Toast'
 import { authenticateUser, getUserData, generateId, sharePost, shareProfile, registerUser, getSavedProfiles, getUserById } from './store'
 
-// ============================================
-// PROTECTED APP CONTENT
-// This component is PHYSICALLY IMPOSSIBLE to render
-// unless isLoggedIn === true. This is the Protected
-// Route pattern — simulating secure session control.
-// ============================================
-
 function AppContent() {
   const toast = useToast()
-  
+
   // ============================================
   // AUTH STATE — Security Simulation
-  // isLoggedIn gates all UI rendering below.
-  // No Feed, Sidebar, or Profile unless authenticated.
   // ============================================
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
-  
+
   // Page navigation
   const [currentPage, setCurrentPage] = useState('home')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showRefactorModal, setShowRefactorModal] = useState(null)
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState({ stories: false, trending: false, suggestions: false })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  
+
   // ============================================
   // DATA STATE — Hydrated on login from per-user files.
-  // App.jsx doesn't know WHO the user is — it just
-  // expects arrays. Add 1,000 users by adding data
-  // files, without touching this UI code.
   // ============================================
   const [posts, setPosts] = useState([])
   const [comments, setComments] = useState({})
   const [notifications, setNotifications] = useState([])
   const [conversations, setConversations] = useState([])
   const [bugStories, setBugStories] = useState([])
-  
+
   // Navigation helpers
   const [initialChatId, setInitialChatId] = useState(null)
   const [feedFilter, setFeedFilter] = useState('latest')
 
   // ============================================
   // LOGIN HANDLER — State Hydration
-  // Authenticates user, then pulls their specific
-  // data arrays and injects into React state.
-  // Simulates fetching from a SQL/NoSQL database.
   // ============================================
   const handleLogin = useCallback((username, password, directId) => {
     let user
@@ -69,10 +54,10 @@ function AppContent() {
       user = authenticateUser(username, password)
     }
     if (!user) return false
-    
+
     // Hydrate state with user-specific data
     const data = getUserData(user.id)
-    
+
     setCurrentUser(user)
     // If no data file exists (new user), use empty arrays
     setPosts(data?.posts || [])
@@ -83,18 +68,17 @@ function AppContent() {
     setIsLoggedIn(true)
     setCurrentPage('home')
     setFeedFilter('latest')
-    
+
     return true
   }, [])
 
   // ============================================
   // SIGNUP HANDLER — Creates new user account
-  // Registers user then hydrates with empty data.
   // ============================================
   const handleSignUp = useCallback((username, password) => {
     const user = registerUser(username, password)
     if (!user) return false
-    
+
     // New user — empty data
     setCurrentUser(user)
     setPosts([])
@@ -105,7 +89,7 @@ function AppContent() {
     setIsLoggedIn(true)
     setCurrentPage('home')
     setFeedFilter('latest')
-    
+
     return true
   }, [])
 
@@ -135,7 +119,7 @@ function AppContent() {
   // ============================================
   if (!isLoggedIn) {
     return (
-      <LoginPage 
+      <LoginPage
         onLogin={handleLogin}
         onSignUp={handleSignUp}
         savedProfiles={getSavedProfiles()}
@@ -152,12 +136,12 @@ function AppContent() {
   const handleCreatePost = (content, code, language) => {
     const newPost = {
       id: generateId(),
-      user: { 
-        name: currentUser.name, 
-        handle: currentUser.handle, 
-        avatar: currentUser.avatar, 
-        badge: currentUser.badge, 
-        karma: currentUser.karma 
+      user: {
+        name: currentUser.name,
+        handle: currentUser.handle,
+        avatar: currentUser.avatar,
+        badge: currentUser.badge,
+        karma: currentUser.karma
       },
       content,
       code,
@@ -298,7 +282,7 @@ function AppContent() {
 
   // Mark notification as read
   const handleMarkNotificationRead = (notificationId) => {
-    setNotifications(prev => prev.map(n => 
+    setNotifications(prev => prev.map(n =>
       n.id === notificationId ? { ...n, unread: false } : n
     ))
   }
@@ -334,7 +318,7 @@ function AppContent() {
   const handleDiscussBug = (bug) => {
     // Find existing conversation matching the bug author's avatar
     let conv = conversations.find(c => c.avatar === bug.user)
-    
+
     if (!conv) {
       // Create new conversation for this bug author
       conv = {
@@ -352,7 +336,7 @@ function AppContent() {
       }
       setConversations(prev => [conv, ...prev])
     }
-    
+
     setInitialChatId(conv.id)
     setCurrentPage('messages')
     toast.info(`Opening chat about ${bug.error} bug with ${bug.name}...`)
@@ -382,9 +366,9 @@ function AppContent() {
     switch (currentPage) {
       case 'home':
         return (
-          <Feed 
-            posts={posts} 
-            onLike={handleLike} 
+          <Feed
+            posts={posts}
+            onLike={handleLike}
             onRefactor={handleRefactor}
             onBookmark={handleBookmark}
             onComment={handleAddComment}
@@ -405,7 +389,7 @@ function AppContent() {
         return <Explore toast={toast} />
       case 'messages':
         return (
-          <Messages 
+          <Messages
             currentUser={currentUser}
             conversations={conversations}
             onMarkRead={handleMarkConversationRead}
@@ -415,7 +399,7 @@ function AppContent() {
         )
       case 'notifications':
         return (
-          <Notifications 
+          <Notifications
             currentUser={currentUser}
             notifications={notifications}
             onMarkRead={handleMarkNotificationRead}
@@ -426,10 +410,10 @@ function AppContent() {
         )
       case 'profile':
         return (
-          <Profile 
-            posts={posts.filter(p => p.user.handle === currentUser.handle)} 
-            onLike={handleLike} 
-            currentUser={currentUser} 
+          <Profile
+            posts={posts.filter(p => p.user.handle === currentUser.handle)}
+            onLike={handleLike}
+            currentUser={currentUser}
             setCurrentUser={setCurrentUser}
             onUpdateProfile={handleUpdateProfile}
             onShareProfile={handleShareProfile}
@@ -439,16 +423,16 @@ function AppContent() {
         )
       case 'badges':
         return (
-          <Badges 
+          <Badges
             currentUser={currentUser}
             toast={toast}
           />
         )
       default:
         return (
-          <Feed 
-            posts={posts} 
-            onLike={handleLike} 
+          <Feed
+            posts={posts}
+            onLike={handleLike}
             onRefactor={handleRefactor}
             onBookmark={handleBookmark}
             onComment={handleAddComment}
@@ -472,8 +456,8 @@ function AppContent() {
 
   return (
     <div className={`app-container ${!showRightPanel ? 'no-right-panel' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <Sidebar 
-        currentPage={currentPage} 
+      <Sidebar
+        currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         onCreateClick={() => setShowCreateModal(true)}
         isCollapsed={sidebarCollapsed}
@@ -487,14 +471,14 @@ function AppContent() {
         {renderPage()}
       </main>
       {showRightPanel && (
-        <RightPanel 
+        <RightPanel
           collapsed={rightPanelCollapsed}
           setCollapsed={setRightPanelCollapsed}
           toast={toast}
         />
       )}
       {showCreateModal && (
-        <CreatePostModal 
+        <CreatePostModal
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreatePost}
         />

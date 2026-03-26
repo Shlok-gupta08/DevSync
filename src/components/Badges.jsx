@@ -264,8 +264,8 @@ const mockLeaderboards = {
   ],
 }
 
-// Current user's badge progress
-const userBadgeProgress = {
+// Current user's badge progress (mock data)
+const mockBadgeProgress = {
   javascript: { points: 1850, totalContributions: 156 },
   python: { points: 2100, totalContributions: 89 },
   react: { points: 2400, totalContributions: 112 },
@@ -285,6 +285,9 @@ function Badges({ currentUser, toast }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
 
+  const isDemoUser = ['shlok', 'saksham', 'krrish'].includes(currentUser?.id)
+  const userBadgeProgress = isDemoUser ? mockBadgeProgress : {}
+
   const categories = [
     { id: 'all', label: 'All Badges' },
     { id: 'language', label: 'Languages' },
@@ -296,8 +299,9 @@ function Badges({ currentUser, toast }) {
 
   const getUserLevel = (badgeId) => {
     const badge = badgeDefinitions.find(b => b.id === badgeId)
-    const progress = userBadgeProgress[badgeId]
-    if (!badge || !progress) return badge?.levels[0]
+    const progress = userBadgeProgress[badgeId] || { points: 0 }
+    if (!badge) return null
+    if (!progress) return badge.levels[0]
     
     let currentLevel = badge.levels[0]
     for (const level of badge.levels) {
@@ -310,8 +314,9 @@ function Badges({ currentUser, toast }) {
 
   const getNextLevel = (badgeId) => {
     const badge = badgeDefinitions.find(b => b.id === badgeId)
-    const progress = userBadgeProgress[badgeId]
-    if (!badge || !progress) return null
+    const progress = userBadgeProgress[badgeId] || { points: 0 }
+    if (!badge) return null
+    if (!progress) return badge.levels.length > 1 ? badge.levels[1] : null
     
     for (const level of badge.levels) {
       if (progress.points < level.minPoints) {
@@ -322,11 +327,12 @@ function Badges({ currentUser, toast }) {
   }
 
   const getProgressPercentage = (badgeId) => {
-    const progress = userBadgeProgress[badgeId]
+    const progress = userBadgeProgress[badgeId] || { points: 0 }
     const currentLevel = getUserLevel(badgeId)
     const nextLevel = getNextLevel(badgeId)
     
-    if (!progress || !nextLevel) return 100
+    if (!nextLevel) return 100
+    if (!progress) return 0
     
     const pointsInLevel = progress.points - currentLevel.minPoints
     const levelRange = nextLevel.minPoints - currentLevel.minPoints
@@ -352,7 +358,10 @@ function Badges({ currentUser, toast }) {
   }
 
   const selectedBadgeData = selectedBadge ? badgeDefinitions.find(b => b.id === selectedBadge) : null
-  const leaderboard = selectedBadge ? (mockLeaderboards[selectedBadge] || []) : []
+  const leaderboard = selectedBadge ? (mockLeaderboards[selectedBadge] || []).map(entry => ({
+    ...entry,
+    isCurrentUser: entry.handle === currentUser?.handle || (entry.isCurrentUser && isDemoUser)
+  })) : []
 
   return (
     <div className="badges-page">

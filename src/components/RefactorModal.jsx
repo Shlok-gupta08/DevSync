@@ -16,17 +16,9 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
     return colors[lang] || '#d4a017'
   }
 
-  // ============================================
-  // SYNTAX VALIDATION
-  // For JS/TS: uses new Function() to catch SyntaxErrors
-  // For other langs: basic bracket/brace matching heuristic
-  // Refactor is BLOCKED if syntax errors are found.
-  // ============================================
-
   const validateSyntax = (code, language) => {
     if (language === 'javascript' || language === 'typescript') {
       try {
-        // Wrap in function to catch syntax errors without executing
         new Function(code)
         return { valid: true, error: '' }
       } catch (err) {
@@ -37,12 +29,12 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
         return { valid: true, error: '' }
       }
     }
-    
+
     // For other languages: heuristic bracket matching
     const brackets = { '(': ')', '[': ']', '{': '}' }
     const closingBrackets = new Set([')', ']', '}'])
     const stack = []
-    
+
     // Strip strings and comments for bracket matching
     const stripped = code
       .replace(/\/\/.*$/gm, '')       // single-line comments
@@ -62,12 +54,12 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
         stack.pop()
       }
     }
-    
+
     if (stack.length > 0) {
       const unmatched = stack[stack.length - 1]
       return { valid: false, error: `Syntax Error: Unclosed bracket — expected '${unmatched.char}'` }
     }
-    
+
     return { valid: true, error: '' }
   }
 
@@ -75,13 +67,13 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
     const originalLines = post.code.split('\n')
     const refactoredLines = refactoredCode.split('\n')
     const diff = []
-    
+
     const maxLen = Math.max(originalLines.length, refactoredLines.length)
-    
+
     for (let i = 0; i < maxLen; i++) {
       const orig = originalLines[i] || ''
       const refac = refactoredLines[i] || ''
-      
+
       if (orig === refac) {
         diff.push({ type: 'same', line: orig, lineNum: i + 1 })
       } else if (!originalLines[i]) {
@@ -93,7 +85,7 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
         diff.push({ type: 'added', line: refac, lineNum: i + 1 })
       }
     }
-    
+
     return diff
   }
 
@@ -104,7 +96,7 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
       setSyntaxError('')
       return
     }
-    
+
     // Check 2: Code must have no syntax errors
     const validation = validateSyntax(refactoredCode, post.language)
     if (!validation.valid) {
@@ -112,7 +104,7 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
       toast && toast.error('Fix syntax errors before previewing.')
       return
     }
-    
+
     setSyntaxError('')
     setShowDiff(true)
   }
@@ -123,7 +115,7 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
       toast && toast.error('Please make changes to the code before submitting.')
       return
     }
-    
+
     // Double-check: no syntax errors
     const validation = validateSyntax(refactoredCode, post.language)
     if (!validation.valid) {
@@ -131,7 +123,7 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
       toast && toast.error('Cannot submit refactor with syntax errors.')
       return
     }
-    
+
     setSyntaxError('')
     onSubmit && onSubmit(post.id, refactoredCode, explanation)
   }
