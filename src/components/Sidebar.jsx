@@ -1,6 +1,6 @@
-import { Home, Compass, MessageCircle, Bell, User, Code2, Settings, GitBranch, Bug, PanelLeftClose, PanelLeft, Trophy } from 'lucide-react'
+import { Home, Compass, MessageCircle, Bell, User, Code2, Settings, GitBranch, Bug, PanelLeftClose, PanelLeft, Trophy, LogOut } from 'lucide-react'
 
-function Sidebar({ currentPage, setCurrentPage, onCreateClick, isCollapsed, setIsCollapsed, currentUser, unreadNotifications = 0, unreadMessages = 0 }) {
+function Sidebar({ currentPage, setCurrentPage, onCreateClick, isCollapsed, setIsCollapsed, currentUser, unreadNotifications = 0, unreadMessages = 0, onLogout }) {
   const navItems = [
     { id: 'home', label: 'Feed', icon: Home, badge: 0 },
     { id: 'explore', label: 'Explore', icon: Compass, badge: 0 },
@@ -59,10 +59,20 @@ function Sidebar({ currentPage, setCurrentPage, onCreateClick, isCollapsed, setI
               <div className="user-name">{currentUser?.name || 'User'}</div>
               <div className="user-karma">⚡ {currentUser?.karma?.toLocaleString() || 0} karma</div>
             </div>
-            <Settings size={18} style={{ color: 'var(--text-muted)' }} />
           </>
         )}
       </div>
+
+      {onLogout && (
+        <button
+          className="sidebar-logout-btn"
+          onClick={(e) => { e.stopPropagation(); onLogout(); }}
+          title={isCollapsed ? 'Logout' : ''}
+        >
+          <LogOut size={18} />
+          {!isCollapsed && <span>Logout</span>}
+        </button>
+      )}
     </aside>
   )
 }

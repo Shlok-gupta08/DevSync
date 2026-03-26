@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { X, GitBranch, Play, ArrowRight } from 'lucide-react'
+import { X, GitBranch, Play, ArrowRight, AlertTriangle } from 'lucide-react'
 
 function RefactorModal({ post, onClose, onSubmit, toast }) {
   const [refactoredCode, setRefactoredCode] = useState(post.code)
   const [showDiff, setShowDiff] = useState(false)
   const [explanation, setExplanation] = useState('')
+  const [syntaxError, setSyntaxError] = useState('')
 
   const getLanguageColor = (lang) => {
     const colors = {
@@ -13,6 +14,61 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
       cpp: '#f34b7d',
     }
     return colors[lang] || '#d4a017'
+  }
+
+  // ============================================
+  // SYNTAX VALIDATION
+  // For JS/TS: uses new Function() to catch SyntaxErrors
+  // For other langs: basic bracket/brace matching heuristic
+  // Refactor is BLOCKED if syntax errors are found.
+  // ============================================
+
+  const validateSyntax = (code, language) => {
+    if (language === 'javascript' || language === 'typescript') {
+      try {
+        // Wrap in function to catch syntax errors without executing
+        new Function(code)
+        return { valid: true, error: '' }
+      } catch (err) {
+        if (err instanceof SyntaxError) {
+          return { valid: false, error: `SyntaxError: ${err.message}` }
+        }
+        // Non-syntax errors are fine (runtime errors mean syntax is valid)
+        return { valid: true, error: '' }
+      }
+    }
+    
+    // For other languages: heuristic bracket matching
+    const brackets = { '(': ')', '[': ']', '{': '}' }
+    const closingBrackets = new Set([')', ']', '}'])
+    const stack = []
+    
+    // Strip strings and comments for bracket matching
+    const stripped = code
+      .replace(/\/\/.*$/gm, '')       // single-line comments
+      .replace(/\/\*[\s\S]*?\*\//g, '') // multi-line comments
+      .replace(/#.*$/gm, '')          // Python comments
+      .replace(/"(?:[^"\\]|\\.)*"/g, '') // double-quoted strings
+      .replace(/'(?:[^'\\]|\\.)*'/g, '') // single-quoted strings
+
+    for (let i = 0; i < stripped.length; i++) {
+      const ch = stripped[i]
+      if (brackets[ch]) {
+        stack.push({ char: brackets[ch], pos: i })
+      } else if (closingBrackets.has(ch)) {
+        if (stack.length === 0 || stack[stack.length - 1].char !== ch) {
+          return { valid: false, error: `Syntax Error: Unmatched '${ch}' at position ${i}` }
+        }
+        stack.pop()
+      }
+    }
+    
+    if (stack.length > 0) {
+      const unmatched = stack[stack.length - 1]
+      return { valid: false, error: `Syntax Error: Unclosed bracket — expected '${unmatched.char}'` }
+    }
+    
+    return { valid: true, error: '' }
   }
 
   const generateDiff = () => {
@@ -42,18 +98,41 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
   }
 
   const handlePreviewDiff = () => {
+    // Check 1: Code must be different from original
     if (refactoredCode === post.code) {
       toast && toast.warning('No changes detected. Modify the code first.')
+      setSyntaxError('')
       return
     }
+    
+    // Check 2: Code must have no syntax errors
+    const validation = validateSyntax(refactoredCode, post.language)
+    if (!validation.valid) {
+      setSyntaxError(validation.error)
+      toast && toast.error('Fix syntax errors before previewing.')
+      return
+    }
+    
+    setSyntaxError('')
     setShowDiff(true)
   }
 
   const handleSubmitRefactor = () => {
+    // Double-check: code must be different
     if (refactoredCode === post.code) {
       toast && toast.error('Please make changes to the code before submitting.')
       return
     }
+    
+    // Double-check: no syntax errors
+    const validation = validateSyntax(refactoredCode, post.language)
+    if (!validation.valid) {
+      setSyntaxError(validation.error)
+      toast && toast.error('Cannot submit refactor with syntax errors.')
+      return
+    }
+    
+    setSyntaxError('')
     onSubmit && onSubmit(post.id, refactoredCode, explanation)
   }
 
@@ -96,11 +175,17 @@ function RefactorModal({ post, onClose, onSubmit, toast }) {
                 <span className="section-hint">Optimize, improve, or suggest alternatives</span>
               </div>
               <textarea
-                className="refactor-textarea"
+                className={`refactor-textarea ${syntaxError ? 'has-error' : ''}`}
                 value={refactoredCode}
-                onChange={(e) => setRefactoredCode(e.target.value)}
+                onChange={(e) => { setRefactoredCode(e.target.value); setSyntaxError('') }}
                 spellCheck={false}
               />
+              {syntaxError && (
+                <div className="refactor-syntax-error">
+                  <AlertTriangle size={14} />
+                  <span>{syntaxError}</span>
+                </div>
+              )}
               <div className="refactor-explanation">
                 <label>Explanation (optional)</label>
                 <textarea

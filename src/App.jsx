@@ -9,57 +9,144 @@ import Notifications from './components/Notifications'
 import Badges from './components/Badges'
 import CreatePostModal from './components/CreatePostModal'
 import RefactorModal from './components/RefactorModal'
+import LoginPage from './components/LoginPage'
 import { ToastProvider, useToast } from './components/Toast'
-import { mockPosts, mockNotifications, mockConversations, mockComments, mockBugStories, generateId, sharePost, shareProfile } from './store'
+import { authenticateUser, getUserData, generateId, sharePost, shareProfile, registerUser, getSavedProfiles, getUserById } from './store'
+
+// ============================================
+// PROTECTED APP CONTENT
+// This component is PHYSICALLY IMPOSSIBLE to render
+// unless isLoggedIn === true. This is the Protected
+// Route pattern — simulating secure session control.
+// ============================================
 
 function AppContent() {
   const toast = useToast()
+  
+  // ============================================
+  // AUTH STATE — Security Simulation
+  // isLoggedIn gates all UI rendering below.
+  // No Feed, Sidebar, or Profile unless authenticated.
+  // ============================================
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
+  
+  // Page navigation
   const [currentPage, setCurrentPage] = useState('home')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showRefactorModal, setShowRefactorModal] = useState(null)
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState({ stories: false, trending: false, suggestions: false })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   
-  // Centralized user state - single source of truth for user data
-  const [currentUser, setCurrentUser] = useState({
-    name: 'Skyline Coders',
-    handle: '@skyline_coders',
-    avatar: 'SC',
-    badge: 'Pro Dev',
-    karma: 4521,
-    bio: '🚀 Full-stack developer | Open source enthusiast | Building the future one commit at a time',
-    currentlyLearning: 'Rust',
-    github: 'skyline_coders',
-    website: 'skyline_coder.dev',
-    location: 'Delhi, India',
-    joinedDate: 'Jan 2024',
-    snippets: 156,
-    refactors: 89,
-    followers: 1200,
-    following: 342,
-    isPrivate: false,
-  })
-
-  // Posts state
-  const [posts, setPosts] = useState(mockPosts)
+  // ============================================
+  // DATA STATE — Hydrated on login from per-user files.
+  // App.jsx doesn't know WHO the user is — it just
+  // expects arrays. Add 1,000 users by adding data
+  // files, without touching this UI code.
+  // ============================================
+  const [posts, setPosts] = useState([])
+  const [comments, setComments] = useState({})
+  const [notifications, setNotifications] = useState([])
+  const [conversations, setConversations] = useState([])
+  const [bugStories, setBugStories] = useState([])
   
-  // Comments state
-  const [comments, setComments] = useState(mockComments)
-  
-  // Notifications state
-  const [notifications, setNotifications] = useState(mockNotifications)
-  
-  // Conversations state  
-  const [conversations, setConversations] = useState(mockConversations)
-  
-  // Bug stories state
-  const [bugStories, setBugStories] = useState(mockBugStories)
-  
-  // Initial chat ID for navigating to messages from bug discussion
+  // Navigation helpers
   const [initialChatId, setInitialChatId] = useState(null)
-  
-  // Feed filter
   const [feedFilter, setFeedFilter] = useState('latest')
+
+  // ============================================
+  // LOGIN HANDLER — State Hydration
+  // Authenticates user, then pulls their specific
+  // data arrays and injects into React state.
+  // Simulates fetching from a SQL/NoSQL database.
+  // ============================================
+  const handleLogin = useCallback((username, password, directId) => {
+    let user
+    if (directId) {
+      // Direct login from saved profiles — bypass password check
+      user = getUserById(directId)
+    } else {
+      user = authenticateUser(username, password)
+    }
+    if (!user) return false
+    
+    // Hydrate state with user-specific data
+    const data = getUserData(user.id)
+    
+    setCurrentUser(user)
+    // If no data file exists (new user), use empty arrays
+    setPosts(data?.posts || [])
+    setComments(data?.comments || {})
+    setNotifications(data?.notifications || [])
+    setConversations(data?.conversations || [])
+    setBugStories(data?.bugStories || [])
+    setIsLoggedIn(true)
+    setCurrentPage('home')
+    setFeedFilter('latest')
+    
+    return true
+  }, [])
+
+  // ============================================
+  // SIGNUP HANDLER — Creates new user account
+  // Registers user then hydrates with empty data.
+  // ============================================
+  const handleSignUp = useCallback((username, password) => {
+    const user = registerUser(username, password)
+    if (!user) return false
+    
+    // New user — empty data
+    setCurrentUser(user)
+    setPosts([])
+    setComments({})
+    setNotifications([])
+    setConversations([])
+    setBugStories([])
+    setIsLoggedIn(true)
+    setCurrentPage('home')
+    setFeedFilter('latest')
+    
+    return true
+  }, [])
+
+  // ============================================
+  // LOGOUT HANDLER — Clears all state
+  // Returns to login page, all data is wiped.
+  // ============================================
+  const handleLogout = useCallback(() => {
+    setIsLoggedIn(false)
+    setCurrentUser(null)
+    setPosts([])
+    setComments({})
+    setNotifications([])
+    setConversations([])
+    setBugStories([])
+    setCurrentPage('home')
+    setFeedFilter('latest')
+    setInitialChatId(null)
+    setShowCreateModal(false)
+    setShowRefactorModal(null)
+  }, [])
+
+  // ============================================
+  // PROTECTED ROUTE PATTERN
+  // If not logged in, ONLY the login page renders.
+  // Feed, Sidebar, Profile are physically unreachable.
+  // ============================================
+  if (!isLoggedIn) {
+    return (
+      <LoginPage 
+        onLogin={handleLogin}
+        onSignUp={handleSignUp}
+        savedProfiles={getSavedProfiles()}
+      />
+    )
+  }
+
+  // ============================================
+  // Below here: user IS authenticated.
+  // All handlers work with hydrated state.
+  // ============================================
 
   // Create new post
   const handleCreatePost = (content, code, language) => {
@@ -90,7 +177,7 @@ function AppContent() {
   }
 
   // Upvote/Like a post
-  const handleLike = useCallback((postId) => {
+  const handleLike = (postId) => {
     setPosts(prevPosts => prevPosts.map(post => {
       if (post.id === postId) {
         return {
@@ -101,10 +188,10 @@ function AppContent() {
       }
       return post
     }))
-  }, [])
+  }
 
   // Bookmark a post
-  const handleBookmark = useCallback((postId) => {
+  const handleBookmark = (postId) => {
     let toastMessage = ''
     let toastType = 'info'
     setPosts(prevPosts => prevPosts.map(post => {
@@ -119,16 +206,16 @@ function AppContent() {
     if (toastMessage) {
       toastType === 'success' ? toast.success(toastMessage) : toast.info(toastMessage)
     }
-  }, [toast])
+  }
 
   // Open refactor modal
-  const handleRefactor = useCallback((postId) => {
+  const handleRefactor = (postId) => {
     const post = posts.find(p => p.id === postId)
     setShowRefactorModal(post)
-  }, [posts])
+  }
 
   // Submit refactor
-  const handleSubmitRefactor = useCallback((postId, refactoredCode, explanation) => {
+  const handleSubmitRefactor = (postId, refactoredCode, explanation) => {
     setPosts(prevPosts => prevPosts.map(post => {
       if (post.id === postId) {
         return { ...post, refactors: post.refactors + 1 }
@@ -150,10 +237,10 @@ function AppContent() {
     }
     setShowRefactorModal(null)
     toast.success('Refactor submitted! The author will be notified.')
-  }, [toast, posts, currentUser])
+  }
 
   // Add comment
-  const handleAddComment = useCallback((postId, text) => {
+  const handleAddComment = (postId, text) => {
     const newComment = {
       id: generateId(),
       user: { name: currentUser.name, avatar: currentUser.avatar, handle: currentUser.handle },
@@ -172,21 +259,21 @@ function AppContent() {
       return post
     }))
     toast.success('Comment added!')
-  }, [currentUser, toast])
+  }
 
   // Delete post
-  const handleDeletePost = useCallback((postId) => {
+  const handleDeletePost = (postId) => {
     setPosts(prevPosts => prevPosts.filter(post => post.id !== postId))
     toast.info('Snippet deleted')
-  }, [toast])
+  }
 
   // Report post
-  const handleReportPost = useCallback((postId) => {
+  const handleReportPost = (postId) => {
     toast.success('Report submitted. We\'ll review it shortly.')
-  }, [toast])
+  }
 
   // Share post
-  const handleSharePost = useCallback(async (post) => {
+  const handleSharePost = async (post) => {
     const result = await sharePost(post)
     if (result.success) {
       if (result.method === 'clipboard') {
@@ -197,54 +284,54 @@ function AppContent() {
     } else {
       toast.error('Failed to share')
     }
-  }, [toast])
+  }
 
   // Run code (mock)
-  const handleRunCode = useCallback((postId) => {
+  const handleRunCode = (postId) => {
     setPosts(prevPosts => prevPosts.map(post => {
       if (post.id === postId) {
         return { ...post, runs: post.runs + 1 }
       }
       return post
     }))
-  }, [])
+  }
 
   // Mark notification as read
-  const handleMarkNotificationRead = useCallback((notificationId) => {
+  const handleMarkNotificationRead = (notificationId) => {
     setNotifications(prev => prev.map(n => 
       n.id === notificationId ? { ...n, unread: false } : n
     ))
-  }, [])
+  }
 
   // Mark all notifications as read
-  const handleMarkAllNotificationsRead = useCallback(() => {
+  const handleMarkAllNotificationsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, unread: false })))
     toast.success('All notifications marked as read')
-  }, [toast])
+  }
 
   // Clear notification
-  const handleClearNotification = useCallback((notificationId) => {
+  const handleClearNotification = (notificationId) => {
     setNotifications(prev => prev.filter(n => n.id !== notificationId))
-  }, [])
+  }
 
   // Mark conversation as read
-  const handleMarkConversationRead = useCallback((conversationId) => {
+  const handleMarkConversationRead = (conversationId) => {
     setConversations(prev => prev.map(c =>
       c.id === conversationId ? { ...c, unread: 0 } : c
     ))
-  }, [])
+  }
 
   // Solve bug story
-  const handleSolveBug = useCallback((bugId) => {
+  const handleSolveBug = (bugId) => {
     setBugStories(prev => prev.map(bug =>
       bug.id === bugId ? { ...bug, solved: true } : bug
     ))
     toast.success('🎉 Bug marked as solved! +25 karma')
     setCurrentUser(prev => ({ ...prev, karma: prev.karma + 25 }))
-  }, [toast])
+  }
 
   // Discuss bug solution - opens DM with the bug author
-  const handleDiscussBug = useCallback((bug) => {
+  const handleDiscussBug = (bug) => {
     // Find existing conversation matching the bug author's avatar
     let conv = conversations.find(c => c.avatar === bug.user)
     
@@ -269,23 +356,23 @@ function AppContent() {
     setInitialChatId(conv.id)
     setCurrentPage('messages')
     toast.info(`Opening chat about ${bug.error} bug with ${bug.name}...`)
-  }, [conversations, toast])
+  }
 
   // Update profile
-  const handleUpdateProfile = useCallback((updates) => {
+  const handleUpdateProfile = (updates) => {
     setCurrentUser(prev => ({ ...prev, ...updates }))
     toast.success('Profile updated!')
-  }, [toast])
+  }
 
   // Share profile
-  const handleShareProfile = useCallback(async () => {
+  const handleShareProfile = async () => {
     const result = await shareProfile(currentUser)
     if (result.success) {
       if (result.method === 'clipboard') {
         toast.success('Profile link copied!')
       }
     }
-  }, [currentUser, toast])
+  }
 
   // Get counts for badges
   const unreadNotifications = notifications.filter(n => n.unread).length
@@ -394,6 +481,7 @@ function AppContent() {
         currentUser={currentUser}
         unreadNotifications={unreadNotifications}
         unreadMessages={unreadMessages}
+        onLogout={handleLogout}
       />
       <main className={`main-content ${!showRightPanel ? 'full-width' : ''}`}>
         {renderPage()}

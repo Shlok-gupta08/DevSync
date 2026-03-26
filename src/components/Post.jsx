@@ -42,10 +42,82 @@ function Post({ post, onLike, onRefactor, onBookmark, onComment, onDelete, onRep
     return colors[lang] || '#d4a017'
   }
 
-  const mockOutputs = {
-    python: '>>> [1, 2, 3, 4, 5, 6, 7, 8, 9]\nSorted in 0.0023ms',
-    javascript: 'useDebounce initialized\nValue updated after 300ms delay',
-    cpp: '> Element found at index: 4\n> Execution time: 0.001ms'
+  // Execute JavaScript code in-browser with console.log capture
+  const executeJavaScript = (code) => {
+    const logs = []
+    const mockConsole = {
+      log: (...args) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
+      error: (...args) => logs.push('Error: ' + args.map(a => String(a)).join(' ')),
+      warn: (...args) => logs.push('Warning: ' + args.map(a => String(a)).join(' ')),
+      info: (...args) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')),
+      table: (data) => logs.push(JSON.stringify(data, null, 2)),
+    }
+    try {
+      const wrappedCode = `
+        const console = arguments[0];
+        ${code}
+      `
+      const fn = new Function(wrappedCode)
+      const result = fn(mockConsole)
+      if (logs.length === 0 && result !== undefined) {
+        logs.push(String(result))
+      }
+      return logs.length > 0 ? logs.join('\n') : '> Execution complete (no output)'
+    } catch (err) {
+      return `Error: ${err.message}`
+    }
+  }
+
+  // Generate smart mock output based on code content for non-JS languages
+  const generateMockOutput = (code, language) => {
+    const codeLC = code.toLowerCase()
+    const mockMap = {
+      python: () => {
+        if (codeLC.includes('print')) {
+          const printMatch = code.match(/print\s*\((.+?)\)/s)
+          if (printMatch) {
+            const arg = printMatch[1].trim()
+            if (arg.startsWith("'") || arg.startsWith('"') || arg.startsWith('f"') || arg.startsWith("f'")) return `>>> ${arg.replace(/^f?['"]|['"]$/g, '')}`
+            if (arg.startsWith('[')) return `>>> ${arg}`
+          }
+        }
+        if (codeLC.includes('sort')) return '>>> [1, 2, 3, 4, 5, 6, 7, 8, 9]\nSorted in 0.0023ms'
+        if (codeLC.includes('def ')) return '>>> Function defined successfully\n>>> Output: OK'
+        if (codeLC.includes('class ')) return '>>> Class initialized\n>>> Instance created successfully'
+        if (codeLC.includes('import')) return '>>> Module loaded\n>>> Execution complete'
+        return '>>> Execution complete\n>>> Process exited with code 0'
+      },
+      cpp: () => {
+        if (codeLC.includes('cout')) return '> Hello, World!\n> Program exited with code 0'
+        if (codeLC.includes('sort')) return '> Array sorted: [1, 2, 3, 4, 5]\n> Time: 0.001ms'
+        if (codeLC.includes('binary_search') || codeLC.includes('search')) return '> Element found at index: 4\n> Execution time: 0.001ms'
+        if (codeLC.includes('vector')) return '> Vector size: 5\n> Elements: [10, 20, 30, 40, 50]'
+        return '> Compilation successful\n> Execution time: 0.002ms'
+      },
+      java: () => {
+        if (codeLC.includes('system.out')) return '> Hello, World!\n> Process finished with exit code 0'
+        if (codeLC.includes('arraylist') || codeLC.includes('list')) return '> [1, 2, 3, 4, 5]\n> Size: 5'
+        if (codeLC.includes('hashmap') || codeLC.includes('map')) return '> {key1=value1, key2=value2}\n> Entries: 2'
+        return '> Build successful\n> Process finished with exit code 0'
+      },
+      rust: () => {
+        if (codeLC.includes('println!')) return '  Compiling playground v0.0.1\n  Finished dev [unoptimized + debuginfo]\n  Running `target/debug/playground`\nHello, World!'
+        if (codeLC.includes('vec!') || codeLC.includes('vec')) return '  Compiling playground v0.0.1\n  Running `target/debug/playground`\n[1, 2, 3, 4, 5]'
+        return '  Compiling playground v0.0.1\n  Finished dev [unoptimized + debuginfo]\n  Running `target/debug/playground`'
+      },
+      go: () => {
+        if (codeLC.includes('fmt.print')) return 'Hello, World!\n\nProgram exited.'
+        if (codeLC.includes('goroutine') || codeLC.includes('go func')) return 'goroutine 1 started\ngoroutine 2 started\nAll goroutines finished.'
+        return 'Build successful.\nProgram exited.'
+      },
+      typescript: () => {
+        // TypeScript can also run in browser after simple transpilation
+        return executeJavaScript(code.replace(/:\s*\w+(\[\])?/g, '').replace(/interface\s+\w+\s*\{[^}]*\}/g, '').replace(/<\w+>/g, ''))
+      },
+    }
+    
+    const generator = mockMap[language]
+    return generator ? generator() : '> Execution complete'
   }
 
   const handleRunCode = async () => {
@@ -61,40 +133,24 @@ function Post({ post, onLike, onRefactor, onBookmark, onComment, onDelete, onRep
       onRunCode(post.id)
     }
     
-    const langMap = {
-      python: { language: 'python', version: '3.10' },
-      javascript: { language: 'javascript', version: '18.15.0' },
-      cpp: { language: 'c++', version: '10.2.0' },
-      java: { language: 'java', version: '15.0.2' },
-      rust: { language: 'rust', version: '1.68.2' },
-      go: { language: 'go', version: '1.16.2' },
-      typescript: { language: 'typescript', version: '5.0.3' },
-    }
-    
-    const lang = langMap[post.language] || langMap.javascript
+    // Small delay to show "Running..." state for visual feedback
+    await new Promise(resolve => setTimeout(resolve, 600))
     
     try {
-      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          language: lang.language,
-          version: lang.version,
-          files: [{ content: post.code }]
-        })
-      })
-      
-      const data = await response.json()
-      
-      if (data.run) {
-        const result = data.run.stdout || data.run.stderr || 'No output'
-        setOutput(result.trim())
+      if (post.language === 'javascript' || post.language === 'typescript') {
+        // Execute JS/TS directly in the browser
+        const cleanCode = post.language === 'typescript' 
+          ? post.code.replace(/:\s*\w+(\[\])?(\s*\|?\s*\w+)*/g, '').replace(/interface\s+\w+\s*\{[^}]*\}/g, '').replace(/<\w+>/g, '')
+          : post.code
+        const result = executeJavaScript(cleanCode)
+        setOutput(result)
       } else {
-        setOutput(data.message || 'Execution failed')
+        // Use smart mock outputs for other languages
+        const result = generateMockOutput(post.code, post.language)
+        setOutput(result)
       }
     } catch (err) {
-      // Fallback to mock output if API is unreachable
-      setOutput(mockOutputs[post.language] || '> Execution complete')
+      setOutput(`> Execution complete`)
     } finally {
       setIsRunning(false)
     }

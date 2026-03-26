@@ -117,7 +117,6 @@ function Profile({ posts, onLike, currentUser, setCurrentUser, onUpdateProfile, 
       <div className="dev-profile-header">
         <div className="profile-left">
           <div className="profile-avatar-large dev">{currentUser?.avatar || 'SG'}</div>
-          <div className="profile-status online"></div>
         </div>
         <div className="profile-info">
           <div className="profile-name-row">
@@ -183,7 +182,7 @@ function Profile({ posts, onLike, currentUser, setCurrentUser, onUpdateProfile, 
           </button>
           <button className="edit-profile-btn secondary" onClick={onShareProfile}>
             <Share2 size={16} />
-            Share
+            <span>Share</span>
           </button>
         </div>
       </div>
@@ -342,67 +341,75 @@ function Profile({ posts, onLike, currentUser, setCurrentUser, onUpdateProfile, 
               </button>
             </div>
             <form onSubmit={handleEditSubmit} className="edit-form">
-              <div className="form-group">
-                <label>Name</label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  placeholder="Your name"
-                />
-              </div>
-              <div className="form-group">
-                <label>Bio</label>
-                <textarea
-                  value={editForm.bio}
-                  onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                  placeholder="Tell us about yourself"
-                  rows={3}
-                />
-              </div>
-              <div className="form-group">
-                <label>Currently Learning</label>
-                <input
-                  type="text"
-                  value={editForm.currentlyLearning}
-                  onChange={(e) => setEditForm({ ...editForm, currentlyLearning: e.target.value })}
-                  placeholder="What are you learning?"
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>GitHub</label>
+              <div className="edit-form-scroll">
+                <div className="edit-form-group">
+                  <label htmlFor="edit-name">Display Name</label>
                   <input
+                    id="edit-name"
                     type="text"
-                    value={editForm.github}
-                    onChange={(e) => setEditForm({ ...editForm, github: e.target.value })}
-                    placeholder="username"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    placeholder="Your name"
                   />
                 </div>
-                <div className="form-group">
-                  <label>Website</label>
+                <div className="edit-form-group">
+                  <label htmlFor="edit-bio">Bio</label>
+                  <textarea
+                    id="edit-bio"
+                    value={editForm.bio}
+                    onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                    placeholder="Tell us about yourself"
+                    rows={3}
+                  />
+                </div>
+                <div className="edit-form-group">
+                  <label htmlFor="edit-learning">Currently Learning</label>
                   <input
+                    id="edit-learning"
+                    type="text"
+                    value={editForm.currentlyLearning}
+                    onChange={(e) => setEditForm({ ...editForm, currentlyLearning: e.target.value })}
+                    placeholder="What are you learning?"
+                  />
+                </div>
+                <div className="edit-form-row">
+                  <div className="edit-form-group">
+                    <label htmlFor="edit-github">GitHub Username</label>
+                    <input
+                      id="edit-github"
+                      type="text"
+                      value={editForm.github}
+                      onChange={(e) => setEditForm({ ...editForm, github: e.target.value })}
+                      placeholder="username"
+                    />
+                  </div>
+                  <div className="edit-form-group">
+                    <label htmlFor="edit-location">Location</label>
+                    <input
+                      id="edit-location"
+                      type="text"
+                      value={editForm.location}
+                      onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                      placeholder="City, Country"
+                    />
+                  </div>
+                </div>
+                <div className="edit-form-group">
+                  <label htmlFor="edit-website">Website</label>
+                  <input
+                    id="edit-website"
                     type="text"
                     value={editForm.website}
                     onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
-                    placeholder="yoursite.dev"
+                    placeholder="https://devsync.dev/user/username"
                   />
                 </div>
               </div>
-              <div className="form-group">
-                <label>Location</label>
-                <input
-                  type="text"
-                  value={editForm.location}
-                  onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
-                  placeholder="City, Country"
-                />
-              </div>
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowEditModal(false)}>
+              <div className="edit-form-actions">
+                <button type="button" className="edit-cancel-btn" onClick={() => setShowEditModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="save-btn">
+                <button type="submit" className="edit-save-btn">
                   <Check size={16} />
                   Save Changes
                 </button>
